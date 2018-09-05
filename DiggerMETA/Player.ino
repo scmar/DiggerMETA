@@ -29,13 +29,14 @@ void handlePlayer(int8_t xoff, int8_t yoff) {
     default: die(); //monsters or Player (wich shouldn't happen) :(
   }
 }
+
 void die() {
   byte x = cursor_x; 
   byte y = cursor_y;
   world[x][y] = DEATH;
   dead = true;
   lives--;
-  
+  color=200;
 }
 
 void updateCursor() {

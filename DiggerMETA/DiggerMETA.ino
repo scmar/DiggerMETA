@@ -3,29 +3,20 @@
 #include "Defines.h"
 #include "Sprites.h"
 #include "Level.h"
-
-const char strLoad[]  = "Load";
-const char strSave[]  = "Save";
-const char strExitMenu[]  = "Resume";
-const char strNewGame[]  = "New Game";
-const char lvlUp[]  = "Level up";
-const char lvlDown[]  = "Level down";
-const char strMode[]  = "Toggle Mode";
-
-
-//Put all the different items together in a menu (an array of strings actually)
-const char* const menu[MENULENGTH]  = {
-  strNewGame,
-  strExitMenu,
-  strLoad,
-  strSave,
-  lvlUp,
-  lvlDown,
-  strMode,
-};
+#include "Menu.h"
 
 byte world[WORLD_W][WORLD_H];
 
+//generate Multilang-Array for pause menu
+const MultiLang* Pausemenu[MENULENGTH]  = {
+  lang_new,
+  lang_resume,
+  lang_load,
+  lang_save,
+  lang_levelup,
+  lang_leveldown,
+  lang_toggle,
+};
 
 
 // cursor
@@ -47,34 +38,31 @@ int  codepos = 0;
 int  worldpos = 0;
 byte dir = 7;
 byte timer = 0;
+byte color=0;
 unsigned long starttime=0;
-void setup()
-{
- //Serial.begin(115200);
+void setup(){
   gb.begin();
   initGame();
-//  gb.battery.show = false;
 }
 
 void loop() {
-  if (gb.update()) {
+  while (!gb.update()) {
     switch (gamestate) {
       case PAUSED:
-        //gb.display.setColor(INDEX_BROWN,INDEX_DARKGRAY);
-        switch (gb.menu(menu, MENULENGTH)) {
+        switch (gb.gui.menu(lang_title,Pausemenu, MENULENGTH)) {
           case -1: //nothing selected
-          //  gb.titleScreen(F("DIGGER"));
             break;
           case 3: //save
             if (lives > 0) {
               lives--;
-            //  saveGame();
+              color=200;
+              saveGame();
               gamestate = RUNNING;
               dead = false;
             }
             break;
           case 2: //load game
-          //  loadGame();
+            loadGame();
             gamestate = RUNNING;
             dead = false;
             initWorld(curLevel);
@@ -116,7 +104,7 @@ void loop() {
         //pause the game if menu is pressed
         if (gb.buttons.pressed(BUTTON_MENU)) {
           gamestate = PAUSED;
-          
+          color=0;
         }
         updateCursor();
         updatePhysics();
@@ -132,6 +120,11 @@ void loop() {
         break;
       default:
         break;
+    }
+    
+    if (color > 0){ 
+        color -=10;
+        gb.lights.fill(gb.createColor(color, 0, 0));
     }
   }
 }
@@ -151,6 +144,8 @@ void newGame() {
   gamestate = RUNNING;
   dead = false;
 }
+
+//decoder of compressed level data
 void initWorld(byte _level) {
   diamonds = 0;
   codepos = 0;
@@ -176,6 +171,7 @@ void initWorld(byte _level) {
   }
 }
 
+//helper for decompressor, returns number of bits of an compressed level starting at (bit-) position "codepos" 
 byte getBits(byte _level, byte bits) {
   //uses global var codepos for bitoffset
   const byte *pos = levels[_level] + codepos / 8;
@@ -186,6 +182,7 @@ byte getBits(byte _level, byte bits) {
   return (byte)w;
 }
 
+// set Tile to worldmap. Note: codes in level data have slightly different meanings than in world map.
 void setTile( byte sprite) {
   byte x = worldpos % WORLD_W;
   byte y = worldpos / WORLD_W;

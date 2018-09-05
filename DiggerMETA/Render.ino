@@ -37,6 +37,8 @@ void drawWorld() {
   
   gb.display.print(F(" L:"));
   gb.display.print(curLevel + 1);
+
+  //for debugging: show some stats
  //  gb.display.print(F(" "));
   // gb.display.print((int)(1000/(millis()-starttime)));
   // starttime=millis();
