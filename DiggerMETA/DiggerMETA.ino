@@ -46,7 +46,7 @@ void setup(){
 }
 
 void loop() {
-  while (!gb.update()) {
+    while (!gb.update()); 
     switch (gamestate) {
       case PAUSED:
         switch (gb.gui.menu(lang_title,Pausemenu, MENULENGTH)) {
@@ -126,7 +126,7 @@ void loop() {
         color -=10;
         gb.lights.fill(gb.createColor(color, 0, 0));
     }
-  }
+  
 }
 
 void initGame() {
